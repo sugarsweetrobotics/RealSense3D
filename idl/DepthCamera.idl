@@ -1,0 +1,45 @@
+/**
+ * @date 2016/12/26
+ * @author Yuki Suga (Sugar Sweet Robotics)
+ * @email ysuga@sugarsweetrobotics.com
+ * @description RGBD Camera Image Data Common Interface 
+ * @version 0.1
+ * @license Public Domain
+ * @copyright Yuki Suga, 2016
+ */
+
+#ifndef RGBDCAMERAIMAGE_IDL_INCLUDED
+#define RGBDCAMERAIMAGE_IDL_INCLUDED
+
+#include <BasicDataType.idl>
+#include <ExtendedDataTypes.idl>
+#include <CameraCommonInterface.idl>
+
+module RGBDCamera {
+
+   /// Depth Image Data 
+   struct DepthImage {
+     long width;
+     long height;
+     sequence<octet> raw_data;
+     double verticalFOV;
+     double horizontalFOV;
+   };
+
+   /// RGBCamera Image + Depth Image
+   struct RGBDCameraImage {
+     Img::CameraImage cameraImage;
+     RGBDCamera::DepthImage depthImage;
+     RTC::Geometry3D geometry;
+   };
+
+   /// RGBDCameraImage + Timestamp
+   struct TimedRGBDCameraImage {
+     RTC::Time time;
+     RGBDCamera::RGBDCameraImage data;
+   };
+
+};
+
+
+#endif // RGBDCAMERAIMAGE_IDL_INCLUDED

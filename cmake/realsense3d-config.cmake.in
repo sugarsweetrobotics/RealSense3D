@@ -1,0 +1,54 @@
+# RealSense3D CMake config file
+#
+# This file sets the following variables:
+# RealSense3D_FOUND - Always TRUE.
+# RealSense3D_INCLUDE_DIRS - Directories containing the RealSense3D include files.
+# RealSense3D_IDL_DIRS - Directories containing the RealSense3D IDL files.
+# RealSense3D_LIBRARIES - Libraries needed to use RealSense3D.
+# RealSense3D_DEFINITIONS - Compiler flags for RealSense3D.
+# RealSense3D_VERSION - The version of RealSense3D found.
+# RealSense3D_VERSION_MAJOR - The major version of RealSense3D found.
+# RealSense3D_VERSION_MINOR - The minor version of RealSense3D found.
+# RealSense3D_VERSION_REVISION - The revision version of RealSense3D found.
+# RealSense3D_VERSION_CANDIDATE - The candidate version of RealSense3D found.
+
+message(STATUS "Found RealSense3D-@PROJECT_VERSION@")
+set(RealSense3D_FOUND TRUE)
+
+find_package(<dependency> REQUIRED)
+
+#set(RealSense3D_INCLUDE_DIRS
+#    "@CMAKE_INSTALL_PREFIX@/include/@PROJECT_NAME_LOWER@-@PROJECT_VERSION_MAJOR@"
+#    ${<dependency>_INCLUDE_DIRS}
+#    )
+#
+#set(RealSense3D_IDL_DIRS
+#    "@CMAKE_INSTALL_PREFIX@/include/@PROJECT_NAME_LOWER@-@PROJECT_VERSION_MAJOR@/idl")
+set(RealSense3D_INCLUDE_DIRS
+    "@CMAKE_INSTALL_PREFIX@/include/@CPACK_PACKAGE_FILE_NAME@"
+    ${<dependency>_INCLUDE_DIRS}
+    )
+set(RealSense3D_IDL_DIRS
+    "@CMAKE_INSTALL_PREFIX@/include/@CPACK_PACKAGE_FILE_NAME@/idl")
+
+
+if(WIN32)
+    set(RealSense3D_LIBRARIES
+        "@CMAKE_INSTALL_PREFIX@/@LIB_INSTALL_DIR@/@CMAKE_SHARED_LIBRARY_PREFIX@@PROJECT_NAME_LOWER@@CMAKE_STATIC_LIBRARY_SUFFIX@"
+        ${<dependency>_LIBRARIES}
+        )
+else(WIN32)
+    set(RealSense3D_LIBRARIES
+        "@CMAKE_INSTALL_PREFIX@/@LIB_INSTALL_DIR@/@CMAKE_SHARED_LIBRARY_PREFIX@@PROJECT_NAME_LOWER@@CMAKE_SHARED_LIBRARY_SUFFIX@"
+        ${<dependency>_LIBRARIES}
+        )
+endif(WIN32)
+
+set(RealSense3D_DEFINITIONS ${<dependency>_DEFINITIONS})
+
+set(RealSense3D_VERSION @PROJECT_VERSION@)
+set(RealSense3D_VERSION_MAJOR @PROJECT_VERSION_MAJOR@)
+set(RealSense3D_VERSION_MINOR @PROJECT_VERSION_MINOR@)
+set(RealSense3D_VERSION_REVISION @PROJECT_VERSION_REVISION@)
+set(RealSense3D_VERSION_CANDIDATE @PROJECT_VERSION_CANDIDATE@)
+
