@@ -260,8 +260,6 @@ RTC::ReturnCode_t RealSense3D::onExecute(RTC::UniqueId ec_id)
 			//::setTimestamp<RGBDCamera::TimedRGBDCameraImage>(m_rgbdCameraImage);
 			m_rgbdCameraImageOut.write();
 		}
-
-
 	}
 	// release or unlock the current frame to fetch the next frame
 	m_PXCSenseManager->ReleaseFrame();
