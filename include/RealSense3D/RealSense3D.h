@@ -262,7 +262,18 @@ class RealSense3D
   * - DefaultValue: 480
   */
   int m_height;
-
+  /*!
+  *
+  * - Name:  depthWidth
+  * - DefaultValue: 320
+  */
+  int m_depthWidth;
+  /*!
+  *
+  * - Name:  depthHeight
+  * - DefaultValue: 240
+  */
+  int m_depthHeight;
   // </rtc-template>
 
   // DataInPort declaration

@@ -21,7 +21,7 @@ module RGBDCamera {
    struct DepthImage {
      long width;
      long height;
-     sequence<octet> raw_data;
+     sequence<double> raw_data; // [meter]
      double verticalFOV;
      double horizontalFOV;
    };
