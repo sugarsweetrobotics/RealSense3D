@@ -12,4 +12,4 @@ find_path(RSSDK_LIBRARY_DIRS win32/libpxc.lib
   HINTS "C:/Program Files (x86)/Intel/RSSDK/lib")
 
 find_library(RSSDK_LIBRARY libpxc libpxcmd
-  HINTS "C:/Program Files (x86)/Intel/RSSDK/lib")
+  HINTS "C:/Program Files (x86)/Intel/RSSDK/lib/win32/")

@@ -33,9 +33,15 @@ module RGBDCamera {
      RTC::Geometry3D geometry;
    };
 
+   /// DepthImage + Timestamp
+   struct TimedDepthImage {
+     RTC::Time tm;
+     RGBDCamera::DepthImage data;
+   };
+
    /// RGBDCameraImage + Timestamp
    struct TimedRGBDCameraImage {
-     RTC::Time time;
+     RTC::Time tm;
      RGBDCamera::RGBDCameraImage data;
    };
 

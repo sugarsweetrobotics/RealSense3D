@@ -133,7 +133,7 @@ RTC::ReturnCode_t RealSense3D::onActivated(RTC::UniqueId ec_id)
 	// select the color stream of size 640x480 and depth stream of size 640x480  
 	m_PXCSenseManager->EnableStream(PXCCapture::STREAM_TYPE_COLOR, m_width, m_height);
 	m_PXCSenseManager->EnableStream(PXCCapture::STREAM_TYPE_DEPTH, m_width, m_height); 
-	m_PXCSenseManager->Pixel
+	
 
 	// initialize the PXCSenseManager
 	if( m_PXCSenseManager->Init() != PXC_STATUS_NO_ERROR) {
@@ -141,7 +141,7 @@ RTC::ReturnCode_t RealSense3D::onActivated(RTC::UniqueId ec_id)
 		return RTC::RTC_ERROR;
 	} 
 
-	m_rgbdCameraImage.data.cameraImage.image.format = Img::RGB;
+	m_rgbdCameraImage.data.cameraImage.image.format = Img::CF_RGB;
 	m_rgbdCameraImage.data.cameraImage.image.width = m_width;
 	m_rgbdCameraImage.data.cameraImage.image.height = m_height;
 	m_rgbdCameraImage.data.cameraImage.image.raw_data.length(m_width*m_height * 3);
@@ -187,15 +187,37 @@ RTC::ReturnCode_t RealSense3D::onExecute(RTC::UniqueId ec_id)
 
 	// Accessing Raw Data 
 	// See https://software.intel.com/sites/landingpage/realsense/camera-sdk/v2016r3/documentation/html/index.html?doc_essential_image_data.html
-	Intel::RealSense::ImageData data;
-	colorIm->AcquireAccess(Intel::RealSense::ImageAccess::ACCESS_READ, &data);
-	if (data.format == Intel::RealSense::PixelFormat::PIXEL_FORMAT_RGB) {
 
+	Intel::RealSense::ImageData imdata;
+	colorIm->AcquireAccess(Intel::RealSense::ImageAccess::ACCESS_READ, Intel::RealSense::PixelFormat::PIXEL_FORMAT_RGB24, &imdata);
+	for (int i = 0; i < m_height; i++) {
+		for (int j = 0; j < m_width; j++) {
+			int index = i * m_width + j * 3;
+			m_rgbdCameraImage.data.cameraImage.image.raw_data[index + 0] = (imdata.planes[0])[index + 2];
+			m_rgbdCameraImage.data.cameraImage.image.raw_data[index + 1] = (imdata.planes[0])[index + 1];
+			m_rgbdCameraImage.data.cameraImage.image.raw_data[index + 2] = (imdata.planes[0])[index + 0];
+		}
 	}
-	colorIm->ReleaseAccess(&data);
+	// Color Format must be BGR, so the code below does not work.
+	// memcpy(&(m_rgbdCameraImage.data.cameraImage.image.raw_data[0]), imdata.planes, m_width*m_height * 3 * sizeof(uint8_t));
+	colorIm->ReleaseAccess(&imdata);
+
+	Intel::RealSense::ImageData ddata;
+	depthIm->AcquireAccess(Intel::RealSense::ImageAccess::ACCESS_READ, Intel::RealSense::PixelFormat::PIXEL_FORMAT_DEPTH, &ddata);
+	for (int i = 0; i < m_height; i++) {
+		for (int j = 0; j < m_width; j++) {
+			int index = i * m_width + j;
+			m_rgbdCameraImage.data.depthImage.raw_data[index] = ((uint16_t*)imdata.planes[0])[index];
+		}
+	}
+	//memcpy(&(m_rgbdCameraImage.data.cameraImage.image.raw_data[0]), ddata.planes, m_width*m_height * 3 * sizeof(uint8_t));
+	depthIm->ReleaseAccess(&ddata);
 
 	// release or unlock the current frame to fetch the next frame
 	m_PXCSenseManager->ReleaseFrame(); 
+
+	::setTimestamp<RGBDCamera::TimedRGBDCameraImage>(m_rgbdCameraImage);
+	m_rgbdCameraImageOut.write();
 	return RTC::RTC_OK;
 }
 
