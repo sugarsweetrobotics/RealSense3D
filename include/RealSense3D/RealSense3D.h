@@ -42,6 +42,10 @@ using namespace RGBDCamera;
 
 using namespace RTC;
 
+
+#include <pxcsensemanager.h>     //SDK provided utility class used for rendering  
+// #include "util_render.h"   
+
 /*!
  * @class RealSense3D
  * @brief Intel Real Sense 3D Component
@@ -246,6 +250,18 @@ class RealSense3D
    * - DefaultValue: 1
    */
   int m_debug;
+  /*!
+  *
+  * - Name:  width
+  * - DefaultValue: 640
+  */
+  int m_width;
+  /*!
+  *
+  * - Name:  height
+  * - DefaultValue: 480
+  */
+  int m_height;
 
   // </rtc-template>
 
@@ -290,7 +306,10 @@ class RealSense3D
   
   // </rtc-template>
 
+	 PXCSenseManager *m_PXCSenseManager;
+	 
 };
+
 
 
 extern "C"

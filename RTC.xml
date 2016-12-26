@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <rtc:RtcProfile rtc:version="0.2" rtc:id="RTC:Sugar Sweet Robotics:Sensor:RealSense3D:1.0.0" xmlns:rtcExt="http://www.openrtp.org/namespaces/rtc_ext" xmlns:rtcDoc="http://www.openrtp.org/namespaces/rtc_doc" xmlns:rtc="http://www.openrtp.org/namespaces/rtc" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-    <rtc:BasicInfo xsi:type="rtcExt:basic_info_ext" rtcExt:saveProject="RealSense3D" rtc:updateDate="2016-12-26T10:35:05+09:00" rtc:creationDate="2016-12-26T10:34:24+09:00" rtc:version="1.0.0" rtc:vendor="Sugar Sweet Robotics" rtc:maxInstances="1" rtc:executionType="PeriodicExecutionContext" rtc:executionRate="1000.0" rtc:description="Intel Real Sense 3D Component" rtc:category="Sensor" rtc:componentKind="DataFlowComponent" rtc:activityType="PERIODIC" rtc:componentType="STATIC" rtc:name="RealSense3D">
+    <rtc:BasicInfo xsi:type="rtcExt:basic_info_ext" rtcExt:saveProject="RealSense3D" rtc:updateDate="2016-12-26T12:11:43.361+09:00" rtc:creationDate="2016-12-26T10:34:24+09:00" rtc:version="1.0.0" rtc:vendor="Sugar Sweet Robotics" rtc:maxInstances="1" rtc:executionType="PeriodicExecutionContext" rtc:executionRate="1000.0" rtc:description="Intel Real Sense 3D Component" rtc:category="Sensor" rtc:componentKind="DataFlowComponent" rtc:activityType="PERIODIC" rtc:componentType="STATIC" rtc:name="RealSense3D">
         <rtcDoc:Doc rtcDoc:reference="" rtcDoc:license="GPL" rtcDoc:creator="Sugar Swee Robotics " rtcDoc:algorithm="Intel RealSense3D SDK" rtcDoc:inout="RGB-D Camera Image Data Output " rtcDoc:description="RGB-D Camera Image Data Output RTC for RealSense 3D"/>
         <rtcExt:VersionUpLogs></rtcExt:VersionUpLogs>
     </rtc:BasicInfo>
@@ -22,6 +22,14 @@
     </rtc:Actions>
     <rtc:ConfigurationSet>
         <rtc:Configuration xsi:type="rtcExt:configuration_ext" rtcExt:variableName="debug" rtc:unit="" rtc:defaultValue="1" rtc:type="int" rtc:name="debug">
+            <rtcExt:Properties rtcExt:value="text" rtcExt:name="__widget__"/>
+        </rtc:Configuration>
+        <rtc:Configuration xsi:type="rtcExt:configuration_ext" rtcExt:variableName="width" rtc:unit="px" rtc:defaultValue="640" rtc:type="int" rtc:name="width">
+            <rtcDoc:Doc rtcDoc:constraint="" rtcDoc:range="" rtcDoc:unit="" rtcDoc:description="Width of Captured Image (px)" rtcDoc:defaultValue="" rtcDoc:dataname=""/>
+            <rtcExt:Properties rtcExt:value="text" rtcExt:name="__widget__"/>
+        </rtc:Configuration>
+        <rtc:Configuration xsi:type="rtcExt:configuration_ext" rtcExt:variableName="height" rtc:unit="px" rtc:defaultValue="480" rtc:type="int" rtc:name="height">
+            <rtcDoc:Doc rtcDoc:constraint="" rtcDoc:range="" rtcDoc:unit="" rtcDoc:description="Height of Captured Image (px)" rtcDoc:defaultValue="" rtcDoc:dataname=""/>
             <rtcExt:Properties rtcExt:value="text" rtcExt:name="__widget__"/>
         </rtc:Configuration>
     </rtc:ConfigurationSet>
