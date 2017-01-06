@@ -3,7 +3,7 @@ set(standalone_srcs RealSense3DComp.cpp)
 
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules)
 find_package(RSSDK REQUIRED) 
-set(RTMCAMERA_LIBRARY "rtmCamera112_vc14")
+set(RTMCAMERA_LIBRARY "optimized;rtmCamera112_vc14;debug;rtmCamera112_vc14d")
 
 if (DEFINED OPENRTM_INCLUDE_DIRS)
   string(REGEX REPLACE "-I" ";"
