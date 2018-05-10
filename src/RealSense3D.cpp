@@ -62,7 +62,8 @@ RealSense3D::RealSense3D(RTC::Manager* manager)
 
     // </rtc-template>
 {
-	m_PXCSenseManager = NULL;
+  //m_PXCSenseManager = NULL;
+  
 }
 
 /*!
@@ -130,23 +131,24 @@ RTC::ReturnCode_t RealSense3D::onActivated(RTC::UniqueId ec_id)
 	// create the PXCSenseManager  
     // See https://software.intel.com/sites/landingpage/realsense/camera-sdk/v1.1/documentation/html/index.html?manuals_raw_stream_capture_and_process.html
 	// 
-	m_PXCSenseManager = PXCSenseManager::CreateInstance();
-	if (!m_PXCSenseManager) {          
-		std::cout << "[RealSense3D] Unable to create the PXCSenseManager" << std::endl;
-		return RTC::RTC_ERROR;       
-	}  
+	//m_PXCSenseManager = PXCSenseManager::CreateInstance();
+  pipe.start();
+	// if (!m_PXCSenseManager) {          
+	// 	std::cout << "[RealSense3D] Unable to create the PXCSenseManager" << std::endl;
+	// 	return RTC::RTC_ERROR;       
+	// }  
 
 
-	// select the color stream of size 640x480 and depth stream of size 640x480  
-	m_PXCSenseManager->EnableStream(PXCCapture::STREAM_TYPE_COLOR, m_width, m_height);
-	m_PXCSenseManager->EnableStream(PXCCapture::STREAM_TYPE_DEPTH, m_depthWidth, m_depthHeight); 
+	// // select the color stream of size 640x480 and depth stream of size 640x480  
+	// pipe ->EnableStream(PXCCapture::STREAM_TYPE_COLOR, m_width, m_height);
+	// m_PXCSenseManager->EnableStream(PXCCapture::STREAM_TYPE_DEPTH, m_depthWidth, m_depthHeight); 
 	
 
-	// initialize the PXCSenseManager
-	if( m_PXCSenseManager->Init() != PXC_STATUS_NO_ERROR) {
-		std::cout << "[RealSense3D] Unable to Init the PXCSenseManager" << std::endl;
-		return RTC::RTC_ERROR;
-	} 
+	// // initialize the PXCSenseManager
+	// if( m_PXCSenseManager->Init() != PXC_STATUS_NO_ERROR) {
+	// 	std::cout << "[RealSense3D] Unable to Init the PXCSenseManager" << std::endl;
+	// 	return RTC::RTC_ERROR;
+	// } 
 
 	m_rgbdCameraImage.data.cameraImage.image.format = Img::CF_RGB;
 	m_rgbdCameraImage.data.cameraImage.image.width = m_width;
@@ -198,10 +200,16 @@ RTC::ReturnCode_t RealSense3D::onActivated(RTC::UniqueId ec_id)
 
 RTC::ReturnCode_t RealSense3D::onDeactivated(RTC::UniqueId ec_id)
 {
-	if (m_PXCSenseManager) {
-		m_PXCSenseManager->Release();
-	}
-	m_PXCSenseManager = NULL;
+  auto prof =  pipe.get_active_profile();
+  if ((bool)prof) { // if Active
+    pipe.stop();
+  }
+
+  
+	// if (m_PXCSenseManager) {
+	// 	m_PXCSenseManager->Release();
+	// }
+	// m_PXCSenseManager = NULL;
 
 	std::cout << "[RealSense3D] Successfully Deactivated." << std::endl;
 	return RTC::RTC_OK;
@@ -211,16 +219,23 @@ RTC::ReturnCode_t RealSense3D::onDeactivated(RTC::UniqueId ec_id)
 RTC::ReturnCode_t RealSense3D::onExecute(RTC::UniqueId ec_id)
 {
 
-	PXCImage *colorIm, *depthIm;
+  //	PXCImage *colorIm, *depthIm;
 
 
-	if (m_PXCSenseManager->AcquireFrame(true) < PXC_STATUS_NO_ERROR) {
-		std::cout << "[RealSense3D] Unable AcquireFrame" << std::endl;
-		return RTC::RTC_ERROR;
-	}
+  auto frames = pipe.wait_for_frames();
+  auto depth = frames.get_depth_frame();
+  auto color = frames.get_color_frame();
+  
+  //	if (m_PXCSenseManager->AcquireFrame(true) < PXC_STATUS_NO_ERROR) {
+  //		std::cout << "[RealSense3D] Unable AcquireFrame" << std::endl;
+  //		return RTC::RTC_ERROR;
+  //	}
 
 	// retrieve all available image samples   
-	PXCCapture::Sample *sample = m_PXCSenseManager->QuerySample(); 
+	PXCCapture::Sample *sample = m_PXCSenseManager->QuerySample();
+
+    
+    
 	if (sample) {
 
 		// retrieve the image or frame by type from the sample  
@@ -230,6 +245,7 @@ RTC::ReturnCode_t RealSense3D::onExecute(RTC::UniqueId ec_id)
 		// Accessing Raw Data 
 		// See https://software.intel.com/sites/landingpage/realsense/camera-sdk/v2016r3/documentation/html/index.html?doc_essential_image_data.html
 
+        
 		if (colorIm && depthIm) {
 			Intel::RealSense::ImageData imdata;
 			colorIm->AcquireAccess(Intel::RealSense::ImageAccess::ACCESS_READ, Intel::RealSense::PixelFormat::PIXEL_FORMAT_RGB24, &imdata);

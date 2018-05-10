@@ -43,7 +43,10 @@ using namespace RGBDCamera;
 using namespace RTC;
 
 
-#include <pxcsensemanager.h>     //SDK provided utility class used for rendering  
+
+//#include <pxcsensemanager.h>     //SDK provided utility class used for rendering
+#include <librealsense2/rs.hpp>
+//#include "example.hpp"
 // #include "util_render.h"   
 
 /*!
@@ -316,9 +319,10 @@ class RealSense3D
   // <rtc-template block="private_operation">
   
   // </rtc-template>
-
-	 PXCSenseManager *m_PXCSenseManager;
-	 
+  
+  //  PXCSenseManager *m_PXCSenseManager;
+  rs2::pipeline pipe;
+  
 };
 
 
