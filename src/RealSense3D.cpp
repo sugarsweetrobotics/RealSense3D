@@ -253,9 +253,10 @@ RTC::ReturnCode_t RealSense3D::onExecute(RTC::UniqueId ec_id)
 			for (int i = 0; i < m_height; i++) {
 				for (int j = 0; j < m_width; j++) {
 					int index = (i * m_width + j) * 3;
-					m_rgbdCameraImage.data.cameraImage.image.raw_data[index + 2] = (color_frame);
-					m_rgbdCameraImage.data.cameraImage.image.raw_data[index + 1] = (color_frame);
-					m_rgbdCameraImage.data.cameraImage.image.raw_data[index + 0] = (color_frame);
+					//m_rgbdCameraImage.data.cameraImage.image.raw_data[index + 2] = (color_frame);
+					//m_rgbdCameraImage.data.cameraImage.image.raw_data[index + 1] = (color_frame);
+					//m_rgbdCameraImage.data.cameraImage.image.raw_data[index + 0] = (color_frame);
+				}
 			}
 			// Color Format must be BGR, so the code below does not work.
 			// memcpy(&(m_rgbdCameraImage.data.cameraImage.image.raw_data[0]), imdata.planes, m_width*m_height * 3 * sizeof(uint8_t));
@@ -267,7 +268,7 @@ RTC::ReturnCode_t RealSense3D::onExecute(RTC::UniqueId ec_id)
 			for (int i = 0; i < m_depthHeight; i++) {
 				for (int j = 0; j < m_depthWidth; j++) {
 					int index = i * m_depthWidth + j;
-					m_rgbdCameraImage.data.depthImage.raw_data[index] = depth_frame / 1000.0;// ((uint16_t*)ddata.planes[0])[index] / 1000.0;
+					//m_rgbdCameraImage.data.depthImage.raw_data[index] = depth_frame / 1000.0;// ((uint16_t*)ddata.planes[0])[index] / 1000.0;
 				}
 			}
 			//memcpy(&(m_rgbdCameraImage.data.cameraImage.image.raw_data[0]), ddata.planes, m_width*m_height * 3 * sizeof(uint8_t));

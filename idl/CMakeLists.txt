@@ -28,6 +28,9 @@ macro(_COMPILE_IDL _idl_file)
     set(_idl_srcs_var ${_idl}_SRCS)
     _IDL_OUTPUTS(${_idl} ${CMAKE_CURRENT_BINARY_DIR} ${_idl_srcs_var})
 
+    #    message("openrtm")
+    # message(${IDLC_INCLUDE_DIR})
+    # message(${OPENRTM_DIR})
     add_custom_command(OUTPUT ${${_idl_srcs_var}}
         COMMAND python ${OPENRTM_DIR}/bin/${_rtm_skelwrapper_command} --skel-suffix=Skel --stub-suffix=Stub --idl-file=${_idl}.idl
         COMMAND ${OPENRTM_IDLC} -I${IDLC_INCLUDE_DIR}/rtm/ext/ -I. ${OPENRTM_IDLFLAGS}  ${_idl_file}

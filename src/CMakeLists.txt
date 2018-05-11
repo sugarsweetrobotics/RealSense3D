@@ -5,11 +5,12 @@ list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules)
 
 if(WIN32)
 find_package(RSSDK REQUIRED)
+set(RTMCAMERA_LIBRARY "optimized;rtmCamera112_vc14;debug;rtmCamera112_vc14d")
 else(WIN32)
-
+set(RTMCAMERA_LIBRARY rtmCamera)
 endif(WIN32)
 
-set(RTMCAMERA_LIBRARY "optimized;rtmCamera112_vc14;debug;rtmCamera112_vc14d")
+
 
 if (DEFINED OPENRTM_INCLUDE_DIRS)
   string(REGEX REPLACE "-I" ";"
@@ -71,6 +72,7 @@ target_link_libraries(${PROJECT_NAME} ${OPENRTM_LIBRARIES} ${DEPENDENCIES} ${RTM
 
 add_executable(${PROJECT_NAME}Comp ${standalone_srcs}
   ${comp_srcs} ${comp_headers} ${ALL_IDL_SRCS})
+add_dependencies(${PROJECT_NAME}Comp ALL_IDL_TGT)
 target_link_libraries(${PROJECT_NAME}Comp ${OPENRTM_LIBRARIES} ${DEPENDENCIES} ${RTMCAMERA_LIBRARY})
 
 install(TARGETS ${PROJECT_NAME} ${PROJECT_NAME}Comp
