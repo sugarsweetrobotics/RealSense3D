@@ -62,7 +62,8 @@ RealSense3D::RealSense3D(RTC::Manager* manager)
 
     // </rtc-template>
 {
-	m_PXCSenseManager = NULL;
+  //m_PXCSenseManager = NULL;
+  
 }
 
 /*!
@@ -130,23 +131,24 @@ RTC::ReturnCode_t RealSense3D::onActivated(RTC::UniqueId ec_id)
 	// create the PXCSenseManager  
     // See https://software.intel.com/sites/landingpage/realsense/camera-sdk/v1.1/documentation/html/index.html?manuals_raw_stream_capture_and_process.html
 	// 
-	m_PXCSenseManager = PXCSenseManager::CreateInstance();
-	if (!m_PXCSenseManager) {          
-		std::cout << "[RealSense3D] Unable to create the PXCSenseManager" << std::endl;
-		return RTC::RTC_ERROR;       
-	}  
+	//m_PXCSenseManager = PXCSenseManager::CreateInstance();
+  pipe.start();
+	// if (!m_PXCSenseManager) {          
+	// 	std::cout << "[RealSense3D] Unable to create the PXCSenseManager" << std::endl;
+	// 	return RTC::RTC_ERROR;       
+	// }  
 
 
-	// select the color stream of size 640x480 and depth stream of size 640x480  
-	m_PXCSenseManager->EnableStream(PXCCapture::STREAM_TYPE_COLOR, m_width, m_height);
-	m_PXCSenseManager->EnableStream(PXCCapture::STREAM_TYPE_DEPTH, m_depthWidth, m_depthHeight); 
+	// // select the color stream of size 640x480 and depth stream of size 640x480  
+	// pipe ->EnableStream(PXCCapture::STREAM_TYPE_COLOR, m_width, m_height);
+	// m_PXCSenseManager->EnableStream(PXCCapture::STREAM_TYPE_DEPTH, m_depthWidth, m_depthHeight); 
 	
 
-	// initialize the PXCSenseManager
-	if( m_PXCSenseManager->Init() != PXC_STATUS_NO_ERROR) {
-		std::cout << "[RealSense3D] Unable to Init the PXCSenseManager" << std::endl;
-		return RTC::RTC_ERROR;
-	} 
+	// // initialize the PXCSenseManager
+	// if( m_PXCSenseManager->Init() != PXC_STATUS_NO_ERROR) {
+	// 	std::cout << "[RealSense3D] Unable to Init the PXCSenseManager" << std::endl;
+	// 	return RTC::RTC_ERROR;
+	// } 
 
 	m_rgbdCameraImage.data.cameraImage.image.format = Img::CF_RGB;
 	m_rgbdCameraImage.data.cameraImage.image.width = m_width;
@@ -198,10 +200,15 @@ RTC::ReturnCode_t RealSense3D::onActivated(RTC::UniqueId ec_id)
 
 RTC::ReturnCode_t RealSense3D::onDeactivated(RTC::UniqueId ec_id)
 {
-	if (m_PXCSenseManager) {
-		m_PXCSenseManager->Release();
-	}
-	m_PXCSenseManager = NULL;
+  auto prof =  pipe.get_active_profile();
+  if ((bool)prof) { // if Active
+    pipe.stop();
+  }
+  
+	// if (m_PXCSenseManager) {
+	// 	m_PXCSenseManager->Release();
+	// }
+	// m_PXCSenseManager = NULL;
 
 	std::cout << "[RealSense3D] Successfully Deactivated." << std::endl;
 	return RTC::RTC_OK;
@@ -211,59 +218,71 @@ RTC::ReturnCode_t RealSense3D::onDeactivated(RTC::UniqueId ec_id)
 RTC::ReturnCode_t RealSense3D::onExecute(RTC::UniqueId ec_id)
 {
 
-	PXCImage *colorIm, *depthIm;
+  //	PXCImage *colorIm, *depthIm;
 
-
-	if (m_PXCSenseManager->AcquireFrame(true) < PXC_STATUS_NO_ERROR) {
-		std::cout << "[RealSense3D] Unable AcquireFrame" << std::endl;
-		return RTC::RTC_ERROR;
-	}
+  auto frames = pipe.wait_for_frames();
+  auto depth_frame = frames.first(RS2_STREAM_DEPTH);
+  auto color_frame = frames.first(RS2_STREAM_COLOR);
+  
+  
+  //	if (m_PXCSenseManager->AcquireFrame(true) < PXC_STATUS_NO_ERROR) {
+  //		std::cout << "[RealSense3D] Unable AcquireFrame" << std::endl;
+  //		return RTC::RTC_ERROR;
+  //	}
 
 	// retrieve all available image samples   
-	PXCCapture::Sample *sample = m_PXCSenseManager->QuerySample(); 
-	if (sample) {
+	// PXCCapture::Sample *sample = m_PXCSenseManager->QuerySample();
+
+  if (frames) {
 
 		// retrieve the image or frame by type from the sample  
-		colorIm = sample->color;
-		depthIm = sample->depth;
+		// colorIm = sample->color;
+		// depthIm = sample->depth;
 
+    depth_frame.get_data();
+    color_frame.get_data();
+    
 		// Accessing Raw Data 
 		// See https://software.intel.com/sites/landingpage/realsense/camera-sdk/v2016r3/documentation/html/index.html?doc_essential_image_data.html
 
-		if (colorIm && depthIm) {
-			Intel::RealSense::ImageData imdata;
-			colorIm->AcquireAccess(Intel::RealSense::ImageAccess::ACCESS_READ, Intel::RealSense::PixelFormat::PIXEL_FORMAT_RGB24, &imdata);
+        
+		if (color_frame && depth_frame) {
+			// Intel::RealSense::ImageData imdata;
+			// colorIm->AcquireAccess(Intel::RealSense::ImageAccess::ACCESS_READ, Intel::RealSense::PixelFormat::PIXEL_FORMAT_RGB24, &imdata);
+          
 			for (int i = 0; i < m_height; i++) {
 				for (int j = 0; j < m_width; j++) {
 					int index = (i * m_width + j) * 3;
-					m_rgbdCameraImage.data.cameraImage.image.raw_data[index + 2] = (imdata.planes[0])[index + 2];
-					m_rgbdCameraImage.data.cameraImage.image.raw_data[index + 1] = (imdata.planes[0])[index + 1];
-					m_rgbdCameraImage.data.cameraImage.image.raw_data[index + 0] = (imdata.planes[0])[index + 0];
-				}
+					m_rgbdCameraImage.data.cameraImage.image.raw_data[index + 2] = (color_frame);
+					m_rgbdCameraImage.data.cameraImage.image.raw_data[index + 1] = (color_frame);
+					m_rgbdCameraImage.data.cameraImage.image.raw_data[index + 0] = (color_frame);
 			}
 			// Color Format must be BGR, so the code below does not work.
 			// memcpy(&(m_rgbdCameraImage.data.cameraImage.image.raw_data[0]), imdata.planes, m_width*m_height * 3 * sizeof(uint8_t));
 
 			//m_rgbdCameraImage.data.depthImage.raw_data.length(m_depthWidth*m_depthHeight);
-			Intel::RealSense::ImageData ddata;
-			depthIm->AcquireAccess(Intel::RealSense::ImageAccess::ACCESS_READ, Intel::RealSense::PixelFormat::PIXEL_FORMAT_DEPTH, &ddata);
+			// Intel::RealSense::ImageData ddata;
+			// depthIm->AcquireAccess(Intel::RealSense::ImageAccess::ACCESS_READ, Intel::RealSense::PixelFormat::PIXEL_FORMAT_DEPTH, &ddata);
+            
 			for (int i = 0; i < m_depthHeight; i++) {
 				for (int j = 0; j < m_depthWidth; j++) {
 					int index = i * m_depthWidth + j;
-					m_rgbdCameraImage.data.depthImage.raw_data[index] = ((uint16_t*)ddata.planes[0])[index] / 1000.0;
+					m_rgbdCameraImage.data.depthImage.raw_data[index] = depth_frame / 1000.0;// ((uint16_t*)ddata.planes[0])[index] / 1000.0;
 				}
 			}
 			//memcpy(&(m_rgbdCameraImage.data.cameraImage.image.raw_data[0]), ddata.planes, m_width*m_height * 3 * sizeof(uint8_t));
-			depthIm->ReleaseAccess(&ddata);
-			colorIm->ReleaseAccess(&imdata);
+			// depthIm->ReleaseAccess(&ddata);
+			// colorIm->ReleaseAccess(&imdata);
 
 			//::setTimestamp<RGBDCamera::TimedRGBDCameraImage>(m_rgbdCameraImage);
 			m_rgbdCameraImageOut.write();
 		}
 	}
 	// release or unlock the current frame to fetch the next frame
-	m_PXCSenseManager->ReleaseFrame();
-	return RTC::RTC_OK;
+	// m_PXCSenseManager->ReleaseFrame();
+
+
+    return RTC::RTC_OK;
 }
 
 /*
