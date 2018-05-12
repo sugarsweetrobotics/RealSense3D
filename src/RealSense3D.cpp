@@ -256,7 +256,9 @@ RTC::ReturnCode_t RealSense3D::onExecute(RTC::UniqueId ec_id)
 					m_rgbdCameraImage.data.cameraImage.image.raw_data[index + 2] = (color_frame);
 					m_rgbdCameraImage.data.cameraImage.image.raw_data[index + 1] = (color_frame);
 					m_rgbdCameraImage.data.cameraImage.image.raw_data[index + 0] = (color_frame);
-			}
+                }
+            }
+                
 			// Color Format must be BGR, so the code below does not work.
 			// memcpy(&(m_rgbdCameraImage.data.cameraImage.image.raw_data[0]), imdata.planes, m_width*m_height * 3 * sizeof(uint8_t));
 
