@@ -45,7 +45,9 @@ using namespace RTC;
 
 
 //#include <pxcsensemanager.h>     //SDK provided utility class used for rendering
-#include <librealsense2/rs.hpp>
+//#include <librealsense2/rs.hpp>
+#include <librealsense/rs.hpp>
+
 //#include "example.hpp"
 // #include "util_render.h"   
 
@@ -277,6 +279,11 @@ class RealSense3D
   * - DefaultValue: 240
   */
   int m_depthHeight;
+
+
+  int m_deviceID;
+
+  int m_frameRate;
   // </rtc-template>
 
   // DataInPort declaration
@@ -321,8 +328,10 @@ class RealSense3D
   // </rtc-template>
   
   //  PXCSenseManager *m_PXCSenseManager;
-  rs2::pipeline pipe;
-  
+  //  rs2::pipeline pipe;
+  //  rs::context ctx;
+
+  rs::context* m_pContext;
 };
 
 
