@@ -1,9 +1,17 @@
 set(comp_srcs RealSense3D.cpp )
 set(standalone_srcs RealSense3DComp.cpp)
+set(test_srcs Test.cpp)
 
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules)
-find_package(RSSDK REQUIRED) 
+
+if(WIN32)
+find_package(RSSDK REQUIRED)
 set(RTMCAMERA_LIBRARY "optimized;rtmCamera112_vc14;debug;rtmCamera112_vc14d")
+else(WIN32)
+set(RTMCAMERA_LIBRARY rtmCamera)
+endif(WIN32)
+
+
 
 if (DEFINED OPENRTM_INCLUDE_DIRS)
   string(REGEX REPLACE "-I" ";"
@@ -26,13 +34,18 @@ if (DEFINED OPENRTM_LIBRARIES)
     OPENRTM_LIBRARIES "${OPENRTM_LIBRARIES}")
 endif (DEFINED OPENRTM_LIBRARIES)
 
+execute_process(COMMAND rtm-config --rtm-includedir OUTPUT_VARIABLE RTM_INCLUDE_DIR OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+set(EXTRA_IDL_DIR ${RTM_INCLUDE_DIR}/rtm/ext/)
+
 include_directories(${PROJECT_SOURCE_DIR}/include)
 include_directories(${PROJECT_SOURCE_DIR}/include/${PROJECT_NAME})
 include_directories(${PROJECT_BINARY_DIR})
 include_directories(${PROJECT_BINARY_DIR}/idl)
+include_directories(${EXTRA_IDL_DIR})
 include_directories(${OPENRTM_INCLUDE_DIRS})
 include_directories(${OMNIORB_INCLUDE_DIRS})
-include_directories(${RSSDK_INCLUDE_DIRS})
+
 
 add_definitions(${OPENRTM_CFLAGS})
 add_definitions(${OMNIORB_CFLAGS})
@@ -41,8 +54,13 @@ MAP_ADD_STR(comp_hdrs "../" comp_headers)
 
 link_directories(${OPENRTM_LIBRARY_DIRS})
 link_directories(${OMNIORB_LIBRARY_DIRS})
+if(WIN32)
+include_directories(${RSSDK_INCLUDE_DIRS})
 link_directories(${RSSDK_LIBRARY_DIRS})
-
+set(DEPENDENCIES ${RSSDK_LIBRARY})
+else(WIN32)
+set(DEPENDENCIES realsense)
+endif(WIN32)
 add_library(${PROJECT_NAME} ${LIB_TYPE} ${comp_srcs}
   ${comp_headers} ${ALL_IDL_SRCS})
 set_target_properties(${PROJECT_NAME} PROPERTIES PREFIX "")
@@ -51,11 +69,17 @@ if(NOT TARGET ALL_IDL_TGT)
   add_custom_target(ALL_IDL_TGT)
 endif(NOT TARGET ALL_IDL_TGT)
 add_dependencies(${PROJECT_NAME} ALL_IDL_TGT)
-target_link_libraries(${PROJECT_NAME} ${OPENRTM_LIBRARIES} ${RSSDK_LIBRARY} ${RTMCAMERA_LIBRARY})
+target_link_libraries(${PROJECT_NAME} ${OPENRTM_LIBRARIES} ${DEPENDENCIES} ${RTMCAMERA_LIBRARY})
 
 add_executable(${PROJECT_NAME}Comp ${standalone_srcs}
   ${comp_srcs} ${comp_headers} ${ALL_IDL_SRCS})
-target_link_libraries(${PROJECT_NAME}Comp ${OPENRTM_LIBRARIES} ${RSSDK_LIBRARY} ${RTMCAMERA_LIBRARY})
+add_dependencies(${PROJECT_NAME}Comp ALL_IDL_TGT)
+target_link_libraries(${PROJECT_NAME}Comp ${OPENRTM_LIBRARIES} ${DEPENDENCIES} ${RTMCAMERA_LIBRARY})
+
+add_executable(${PROJECT_NAME}Test ${test_srcs}
+  ${comp_srcs} ${comp_headers} ${ALL_IDL_SRCS})
+add_dependencies(${PROJECT_NAME}Test ALL_IDL_TGT)
+target_link_libraries(${PROJECT_NAME}Test ${OPENRTM_LIBRARIES} ${DEPENDENCIES} ${RTMCAMERA_LIBRARY})
 
 install(TARGETS ${PROJECT_NAME} ${PROJECT_NAME}Comp
     EXPORT ${PROJECT_NAME}

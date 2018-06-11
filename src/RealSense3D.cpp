@@ -12,43 +12,41 @@
  */
 
 #include "RealSense3D.h"
-
+#include <sstream>
 // Module specification
 // <rtc-template block="module_spec">
-static const char* realsense3d_spec[] =
-  {
-    "implementation_id", "RealSense3D",
-    "type_name",         "RealSense3D",
-    "description",       "Intel Real Sense 3D Component",
-    "version",           "1.0.0",
-    "vendor",            "Sugar Sweet Robotics",
-    "category",          "Sensor",
-    "activity_type",     "PERIODIC",
-    "kind",              "DataFlowComponent",
-    "max_instance",      "1",
-    "language",          "C++",
-    "lang_type",         "compile",
-    // Configuration variables
-    "conf.default.debug", "1",
-	"conf.default.width", "640",
-	"conf.default.height", "480",
-	"conf.default.depthWidth", "320",
-	"conf.default.depthHeight", "240",
-    // Widget
-    "conf.__widget__.debug", "text",
-	"conf.__widget__.width", "text",
-	"conf.__widget__.height", "text",
-	// Constraints
-
-    "conf.__type__.debug", "int",
-	"conf.__type__.width", "int",
-	"conf.__type__.height", "int",
-	"conf.__type__.depthWidth", "int",
-	"conf.__type__.depthHeight", "int",
-
-
-    ""
-  };
+static const char* realsense3d_spec[] = {
+  "implementation_id", "RealSense3D",
+  "type_name",         "RealSense3D",
+  "description",       "Intel Real Sense 3D Component",
+  "version",           "1.0.0",
+  "vendor",            "Sugar Sweet Robotics",
+  "category",          "Sensor",
+  "activity_type",     "PERIODIC",
+  "kind",              "DataFlowComponent",
+  "max_instance",      "1",
+  "language",          "C++",
+  "lang_type",         "compile",
+  // Configuration variables
+  "conf.default.debug", "1",
+  "conf.default.width", "640",
+  "conf.default.height", "480",
+  "conf.default.depthWidth", "480",
+  "conf.default.depthHeight", "360",
+  "conf.default.deviceID", "0",
+  "conf.default.frameRate", "60",
+  // Widget
+  "conf.__widget__.debug", "text",
+  "conf.__widget__.width", "text",
+  "conf.__widget__.height", "text",
+  // Constraints
+  "conf.__type__.debug", "int",
+  "conf.__type__.width", "int",
+  "conf.__type__.height", "int",
+  "conf.__type__.depthWidth", "int",
+  "conf.__type__.depthHeight", "int",
+  ""
+};
 // </rtc-template>
 
 /*!
@@ -56,23 +54,19 @@ static const char* realsense3d_spec[] =
  * @param manager Maneger Object
  */
 RealSense3D::RealSense3D(RTC::Manager* manager)
-    // <rtc-template block="initializer">
+  // <rtc-template block="initializer">
   : RTC::DataFlowComponentBase(manager),
     m_rgbdCameraImageOut("rgbdCameraImage", m_rgbdCameraImage)
-
     // </rtc-template>
 {
-	m_PXCSenseManager = NULL;
 }
 
-/*!
- * @brief destructor
- */
-RealSense3D::~RealSense3D()
-{
-}
-
-
+ /*!
+  * @brief destructor
+  */
+ RealSense3D::~RealSense3D()
+ {
+ }
 
 RTC::ReturnCode_t RealSense3D::onInitialize()
 {
@@ -96,10 +90,12 @@ RTC::ReturnCode_t RealSense3D::onInitialize()
   bindParameter("debug", m_debug, "1");
   bindParameter("width", m_width, "640");
   bindParameter("height", m_height, "480");
-  bindParameter("depthWidth", m_depthWidth, "320");
-  bindParameter("depthHeight", m_depthHeight, "240");
+  bindParameter("depthWidth", m_depthWidth, "480");
+  bindParameter("depthHeight", m_depthHeight, "360");
+  bindParameter("deviceID", m_deviceID, "0");
+  bindParameter("frameRate", m_frameRate, "60");
   // </rtc-template>
-  
+
   return RTC::RTC_OK;
 }
 
@@ -127,26 +123,80 @@ RTC::ReturnCode_t RealSense3D::onShutdown(RTC::UniqueId ec_id)
 
 RTC::ReturnCode_t RealSense3D::onActivated(RTC::UniqueId ec_id)
 {
+
+  try {
+    m_pContext = new rs::context();
+    if (m_pContext->get_device_count() == 0) {
+      RTC_ERROR(("No RealSense Device detected"));
+      std::cout << "No RealSense Device detected." << std::endl;
+      return RTC::RTC_ERROR;
+    }
+  } catch ( std::exception& ex) {
+    RTC_ERROR(("Exception: when RealSense Context Created."));
+    std::stringstream ss;
+    ss << "Exception: " << ex.what();
+    RTC_ERROR((ss.str().c_str()));
+    std::cout << "Exception: when RealSense Context Created." << std::endl;
+    std::cout << "Exception: " << ex.what() << std::endl;
+    return RTC::RTC_ERROR;
+  }
+
+  //  
+  // rs2::context ctx;
+  // auto list = ctx.query_devices(); // Get a snapshot of currently connected devices
+  // if(list.size() == 0)
+  //   throw std::runtime_error("No device detected. Is it plugged in?");
+  // rs2::device dev = list.front();
+
 	// create the PXCSenseManager  
     // See https://software.intel.com/sites/landingpage/realsense/camera-sdk/v1.1/documentation/html/index.html?manuals_raw_stream_capture_and_process.html
 	// 
-	m_PXCSenseManager = PXCSenseManager::CreateInstance();
-	if (!m_PXCSenseManager) {          
-		std::cout << "[RealSense3D] Unable to create the PXCSenseManager" << std::endl;
-		return RTC::RTC_ERROR;       
-	}  
+	//m_PXCSenseManager = PXCSenseManager::CreateInstance();
+  RTC_DEBUG(("RealSense Device Preparing...."));
+  rs::device* dev = NULL;
+  try {
+    dev = m_pContext->get_device(m_deviceID);
+    dev->enable_stream(rs::stream::color, m_width, m_height, rs::format::rgb8, m_frameRate, rs::output_buffer_format::continous);
+    dev->enable_stream(rs::stream::depth, m_depthWidth, m_depthHeight, rs::format::z16, m_frameRate, rs::output_buffer_format::continous);
+    //dev->enable_stream(rs::stream::color, rs::preset::best_quality);
+    //dev->enable_stream(rs::stream::depth, rs::preset::best_quality);
+    dev->start();
+  } catch (std::exception &ex) {
+    RTC_ERROR(("Exception: when RealSense Device Preparing."));
+    std::stringstream ss;
+    ss << "Exception: " << ex.what();
+    RTC_ERROR((ss.str().c_str()));
+    std::cout << "Exception: when RealSense Device Preparing." << std::endl;
+    std::cout << "Exception: " << ex.what() << std::endl;
+    return RTC::RTC_ERROR;
+
+  }
+  RTC_DEBUG(("RealSense pipe.start() is called"));
+  
+	// if (!m_PXCSenseManager) {          
+	// 	std::cout << "[RealSense3D] Unable to create the PXCSenseManager" << std::endl;
+	// 	return RTC::RTC_ERROR;       
+	// }  
 
 
-	// select the color stream of size 640x480 and depth stream of size 640x480  
-	m_PXCSenseManager->EnableStream(PXCCapture::STREAM_TYPE_COLOR, m_width, m_height);
-	m_PXCSenseManager->EnableStream(PXCCapture::STREAM_TYPE_DEPTH, m_depthWidth, m_depthHeight); 
+	// // select the color stream of size 640x480 and depth stream of size 640x480  
+	// pipe ->EnableStream(PXCCapture::STREAM_TYPE_COLOR, m_width, m_height);
+	// m_PXCSenseManager->EnableStream(PXCCapture::STREAM_TYPE_DEPTH, m_depthWidth, m_depthHeight); 
 	
 
-	// initialize the PXCSenseManager
-	if( m_PXCSenseManager->Init() != PXC_STATUS_NO_ERROR) {
-		std::cout << "[RealSense3D] Unable to Init the PXCSenseManager" << std::endl;
-		return RTC::RTC_ERROR;
-	} 
+	// // initialize the PXCSenseManager
+	// if( m_PXCSenseManager->Init() != PXC_STATUS_NO_ERROR) {
+	// 	std::cout << "[RealSense3D] Unable to Init the PXCSenseManager" << std::endl;
+	// 	return RTC::RTC_ERROR;
+	// } 
+  auto color_intrinsic = dev->get_stream_intrinsics(rs::stream::color);
+  std::cout << "Color Stream:" << std::endl;
+  std::cout << "  FORMAT   : " << dev->get_stream_format(rs::stream::color) << std::endl;
+  std::cout << "  FRAMERATE: " << dev->get_stream_framerate(rs::stream::color) << std::endl;
+  std::cout << "  WIDTH    : " << dev->get_stream_width(rs::stream::color) << std::endl;
+  std::cout << "  HEIGHT   : " << dev->get_stream_height(rs::stream::color) << std::endl;
+  std::cout << "  H-FOV    : " << color_intrinsic.hfov() << std::endl;
+  std::cout << "  V-FOV    : " << color_intrinsic.vfov() << std::endl;
 
 	m_rgbdCameraImage.data.cameraImage.image.format = Img::CF_RGB;
 	m_rgbdCameraImage.data.cameraImage.image.width = m_width;
@@ -178,13 +228,23 @@ RTC::ReturnCode_t RealSense3D::onActivated(RTC::UniqueId ec_id)
 	m_rgbdCameraImage.data.cameraImage.captured_time.sec = 0;
 	m_rgbdCameraImage.data.cameraImage.captured_time.nsec = 0;
 
-
+    auto depth_intrinsic = dev->get_stream_intrinsics(rs::stream::depth);
+    std::cout << "Depth Stream:" << std::endl;
+    std::cout << "  FORMAT   : " << dev->get_stream_format(rs::stream::depth) << std::endl;
+    std::cout << "  FRAMERATE: " << dev->get_stream_framerate(rs::stream::depth) << std::endl;
+    std::cout << "  WIDTH    : " << dev->get_stream_width(rs::stream::depth) << std::endl;
+    std::cout << "  HEIGHT   : " << dev->get_stream_height(rs::stream::depth) << std::endl;
+    std::cout << "  H-FOV    : " << depth_intrinsic.hfov() << std::endl;
+    std::cout << "  V-FOV    : " << depth_intrinsic.vfov() << std::endl;
+      
 	m_rgbdCameraImage.data.depthImage.width = m_depthWidth;
 	m_rgbdCameraImage.data.depthImage.height = m_depthHeight;
-	m_rgbdCameraImage.data.depthImage.verticalFOV = 0.0;
-	m_rgbdCameraImage.data.depthImage.horizontalFOV = 0.0;
+	m_rgbdCameraImage.data.depthImage.verticalFOV = depth_intrinsic.vfov();
+	m_rgbdCameraImage.data.depthImage.horizontalFOV = depth_intrinsic.hfov();
 	m_rgbdCameraImage.data.depthImage.raw_data.length(m_depthWidth*m_depthHeight);
 
+
+    
 	m_rgbdCameraImage.data.geometry.pose.position.x = 0;
 	m_rgbdCameraImage.data.geometry.pose.position.y = 0;
 	m_rgbdCameraImage.data.geometry.pose.position.z = 0;
@@ -198,72 +258,56 @@ RTC::ReturnCode_t RealSense3D::onActivated(RTC::UniqueId ec_id)
 
 RTC::ReturnCode_t RealSense3D::onDeactivated(RTC::UniqueId ec_id)
 {
-	if (m_PXCSenseManager) {
-		m_PXCSenseManager->Release();
-	}
-	m_PXCSenseManager = NULL;
+  try {
+    rs::device* dev = m_pContext->get_device(m_deviceID);
+    dev->stop();
+    delete m_pContext;
+  } catch (std::exception &ex) {
+    RTC_ERROR(("Exception: when RealSense Context Released."));
+    std::stringstream ss;
+    ss << "Exception: " << ex.what();
+    RTC_ERROR((ss.str().c_str()));
+    std::cout << "Exception: when RealSense Context Released." << std::endl;
+    std::cout << "Exception: " << ex.what() << std::endl;
+    return RTC::RTC_ERROR;
 
-	std::cout << "[RealSense3D] Successfully Deactivated." << std::endl;
-	return RTC::RTC_OK;
+  }
+
+  std::cout << "[RealSense3D] Successfully Deactivated." << std::endl;
+  return RTC::RTC_OK;
 }
 
 
 RTC::ReturnCode_t RealSense3D::onExecute(RTC::UniqueId ec_id)
 {
+  rs::device* dev = m_pContext->get_device(m_deviceID);
+  
+  dev->wait_for_frames();
+  const uint8_t *color_frame = static_cast<const uint8_t*>(dev->get_frame_data(rs::stream::color));
+  const uint16_t *depth_frame = static_cast<const uint16_t*>(dev->get_frame_data(rs::stream::depth));
+        
+  if (color_frame && depth_frame) {
+    for (int i = 0; i < m_height; i++) {
+      for (int j = 0; j < m_width; j++) {
+        int index = (i * m_width + j) * 3;
+        m_rgbdCameraImage.data.cameraImage.image.raw_data[index + 0] = (color_frame[index + 0]);        
+        m_rgbdCameraImage.data.cameraImage.image.raw_data[index + 1] = (color_frame[index + 1]);
+        m_rgbdCameraImage.data.cameraImage.image.raw_data[index + 2] = (color_frame[index + 2]);
+      }
+    }
+  }
 
-	PXCImage *colorIm, *depthIm;
+  float scale = dev->get_depth_scale();
+  for(int i = 0;i < m_depthHeight;i++) {
+    for(int j = 0;j < m_depthWidth;j++) {
+      int index = (i * m_depthWidth + j);
+      m_rgbdCameraImage.data.depthImage.raw_data[index] = depth_frame[index] * scale;
+    }
+  }        
 
-
-	if (m_PXCSenseManager->AcquireFrame(true) < PXC_STATUS_NO_ERROR) {
-		std::cout << "[RealSense3D] Unable AcquireFrame" << std::endl;
-		return RTC::RTC_ERROR;
-	}
-
-	// retrieve all available image samples   
-	PXCCapture::Sample *sample = m_PXCSenseManager->QuerySample(); 
-	if (sample) {
-
-		// retrieve the image or frame by type from the sample  
-		colorIm = sample->color;
-		depthIm = sample->depth;
-
-		// Accessing Raw Data 
-		// See https://software.intel.com/sites/landingpage/realsense/camera-sdk/v2016r3/documentation/html/index.html?doc_essential_image_data.html
-
-		if (colorIm && depthIm) {
-			Intel::RealSense::ImageData imdata;
-			colorIm->AcquireAccess(Intel::RealSense::ImageAccess::ACCESS_READ, Intel::RealSense::PixelFormat::PIXEL_FORMAT_RGB24, &imdata);
-			for (int i = 0; i < m_height; i++) {
-				for (int j = 0; j < m_width; j++) {
-					int index = (i * m_width + j) * 3;
-					m_rgbdCameraImage.data.cameraImage.image.raw_data[index + 2] = (imdata.planes[0])[index + 2];
-					m_rgbdCameraImage.data.cameraImage.image.raw_data[index + 1] = (imdata.planes[0])[index + 1];
-					m_rgbdCameraImage.data.cameraImage.image.raw_data[index + 0] = (imdata.planes[0])[index + 0];
-				}
-			}
-			// Color Format must be BGR, so the code below does not work.
-			// memcpy(&(m_rgbdCameraImage.data.cameraImage.image.raw_data[0]), imdata.planes, m_width*m_height * 3 * sizeof(uint8_t));
-
-			//m_rgbdCameraImage.data.depthImage.raw_data.length(m_depthWidth*m_depthHeight);
-			Intel::RealSense::ImageData ddata;
-			depthIm->AcquireAccess(Intel::RealSense::ImageAccess::ACCESS_READ, Intel::RealSense::PixelFormat::PIXEL_FORMAT_DEPTH, &ddata);
-			for (int i = 0; i < m_depthHeight; i++) {
-				for (int j = 0; j < m_depthWidth; j++) {
-					int index = i * m_depthWidth + j;
-					m_rgbdCameraImage.data.depthImage.raw_data[index] = ((uint16_t*)ddata.planes[0])[index] / 1000.0;
-				}
-			}
-			//memcpy(&(m_rgbdCameraImage.data.cameraImage.image.raw_data[0]), ddata.planes, m_width*m_height * 3 * sizeof(uint8_t));
-			depthIm->ReleaseAccess(&ddata);
-			colorIm->ReleaseAccess(&imdata);
-
-			//::setTimestamp<RGBDCamera::TimedRGBDCameraImage>(m_rgbdCameraImage);
-			m_rgbdCameraImageOut.write();
-		}
-	}
-	// release or unlock the current frame to fetch the next frame
-	m_PXCSenseManager->ReleaseFrame();
-	return RTC::RTC_OK;
+  ::setTimestamp<RGBDCamera::TimedRGBDCameraImage>(m_rgbdCameraImage);
+  m_rgbdCameraImageOut.write();
+  return RTC::RTC_OK;
 }
 
 /*
