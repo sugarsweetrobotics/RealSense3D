@@ -1,5 +1,6 @@
 set(idls ${CMAKE_CURRENT_SOURCE_DIR}/DepthCamera.idl )
 
+
 install(FILES ${idls} DESTINATION ${INC_INSTALL_DIR}/idl
     COMPONENT idl)
 
@@ -11,6 +12,8 @@ endmacro(_IDL_OUTPUTS)
 macro(_COMPILE_IDL _idl_file)
     if(NOT WIN32)
         execute_process(COMMAND rtm-config --prefix OUTPUT_VARIABLE OPENRTM_DIR
+        OUTPUT_STRIP_TRAILING_WHITESPACE)
+        execute_process(COMMAND rtm-config --rtm-includedir OUTPUT_VARIABLE IDLC_INCLUDE_DIR
         OUTPUT_STRIP_TRAILING_WHITESPACE)
         execute_process(COMMAND rtm-config --idlflags OUTPUT_VARIABLE OPENRTM_IDLFLAGS
         OUTPUT_STRIP_TRAILING_WHITESPACE)
@@ -25,9 +28,12 @@ macro(_COMPILE_IDL _idl_file)
     set(_idl_srcs_var ${_idl}_SRCS)
     _IDL_OUTPUTS(${_idl} ${CMAKE_CURRENT_BINARY_DIR} ${_idl_srcs_var})
 
+    #    message("openrtm")
+    # message(${IDLC_INCLUDE_DIR})
+    # message(${OPENRTM_DIR})
     add_custom_command(OUTPUT ${${_idl_srcs_var}}
-        COMMAND python ${OPENRTM_DIR}/bin/${_rtm_skelwrapper_command} --include-dir= --skel-suffix=Skel --stub-suffix=Stub --idl-file=${_idl}.idl
-        COMMAND ${OPENRTM_IDLC} ${OPENRTM_IDLFLAGS} ${_idl_file}
+        COMMAND python ${OPENRTM_DIR}/bin/${_rtm_skelwrapper_command} --skel-suffix=Skel --stub-suffix=Stub --idl-file=${_idl}.idl
+        COMMAND ${OPENRTM_IDLC} -I${IDLC_INCLUDE_DIR}/rtm/ext/ -I. ${OPENRTM_IDLFLAGS}  ${_idl_file}
         WORKING_DIRECTORY ${CURRENT_BINARY_DIR}
         DEPENDS ${_idl_file}
         COMMENT "Compiling ${_idl_file}" VERBATIM)

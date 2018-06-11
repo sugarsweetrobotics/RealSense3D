@@ -59,7 +59,10 @@ include_directories(${RSSDK_INCLUDE_DIRS})
 link_directories(${RSSDK_LIBRARY_DIRS})
 set(DEPENDENCIES ${RSSDK_LIBRARY})
 else(WIN32)
+
 set(DEPENDENCIES realsense)
+//set(DEPENDENCIES realsense2)
+
 endif(WIN32)
 add_library(${PROJECT_NAME} ${LIB_TYPE} ${comp_srcs}
   ${comp_headers} ${ALL_IDL_SRCS})
@@ -80,6 +83,7 @@ add_executable(${PROJECT_NAME}Test ${test_srcs}
   ${comp_srcs} ${comp_headers} ${ALL_IDL_SRCS})
 add_dependencies(${PROJECT_NAME}Test ALL_IDL_TGT)
 target_link_libraries(${PROJECT_NAME}Test ${OPENRTM_LIBRARIES} ${DEPENDENCIES} ${RTMCAMERA_LIBRARY})
+
 
 install(TARGETS ${PROJECT_NAME} ${PROJECT_NAME}Comp
     EXPORT ${PROJECT_NAME}

@@ -58,8 +58,6 @@ RealSense3D::RealSense3D(RTC::Manager* manager)
   : RTC::DataFlowComponentBase(manager),
     m_rgbdCameraImageOut("rgbdCameraImage", m_rgbdCameraImage)
     // </rtc-template>
-{
-}
 
  /*!
   * @brief destructor
@@ -152,6 +150,7 @@ RTC::ReturnCode_t RealSense3D::onActivated(RTC::UniqueId ec_id)
     // See https://software.intel.com/sites/landingpage/realsense/camera-sdk/v1.1/documentation/html/index.html?manuals_raw_stream_capture_and_process.html
 	// 
 	//m_PXCSenseManager = PXCSenseManager::CreateInstance();
+
   RTC_DEBUG(("RealSense Device Preparing...."));
   rs::device* dev = NULL;
   try {
@@ -169,6 +168,7 @@ RTC::ReturnCode_t RealSense3D::onActivated(RTC::UniqueId ec_id)
     std::cout << "Exception: when RealSense Device Preparing." << std::endl;
     std::cout << "Exception: " << ex.what() << std::endl;
     return RTC::RTC_ERROR;
+
 
   }
   RTC_DEBUG(("RealSense pipe.start() is called"));
@@ -189,6 +189,7 @@ RTC::ReturnCode_t RealSense3D::onActivated(RTC::UniqueId ec_id)
 	// 	std::cout << "[RealSense3D] Unable to Init the PXCSenseManager" << std::endl;
 	// 	return RTC::RTC_ERROR;
 	// } 
+
   auto color_intrinsic = dev->get_stream_intrinsics(rs::stream::color);
   std::cout << "Color Stream:" << std::endl;
   std::cout << "  FORMAT   : " << dev->get_stream_format(rs::stream::color) << std::endl;
@@ -197,6 +198,7 @@ RTC::ReturnCode_t RealSense3D::onActivated(RTC::UniqueId ec_id)
   std::cout << "  HEIGHT   : " << dev->get_stream_height(rs::stream::color) << std::endl;
   std::cout << "  H-FOV    : " << color_intrinsic.hfov() << std::endl;
   std::cout << "  V-FOV    : " << color_intrinsic.vfov() << std::endl;
+
 
 	m_rgbdCameraImage.data.cameraImage.image.format = Img::CF_RGB;
 	m_rgbdCameraImage.data.cameraImage.image.width = m_width;
@@ -271,6 +273,7 @@ RTC::ReturnCode_t RealSense3D::onDeactivated(RTC::UniqueId ec_id)
     std::cout << "Exception: " << ex.what() << std::endl;
     return RTC::RTC_ERROR;
 
+
   }
 
   std::cout << "[RealSense3D] Successfully Deactivated." << std::endl;
@@ -308,6 +311,7 @@ RTC::ReturnCode_t RealSense3D::onExecute(RTC::UniqueId ec_id)
   ::setTimestamp<RGBDCamera::TimedRGBDCameraImage>(m_rgbdCameraImage);
   m_rgbdCameraImageOut.write();
   return RTC::RTC_OK;
+
 }
 
 /*
