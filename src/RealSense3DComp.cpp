@@ -16,12 +16,14 @@
 #include <string>
 #include <stdlib.h>
 #include "RealSense3D.h"
+#include <librealsense/rs.hpp>
+
 
 
 void MyModuleInit(RTC::Manager* manager)
 {
   RealSense3DInit(manager);
-  RTC::RtcBase* comp;
+  RTC::RtcBase* comp = NULL;
 
   // Create a component
   comp = manager->createComponent("RealSense3D");
@@ -74,6 +76,23 @@ void MyModuleInit(RTC::Manager* manager)
 
   return;
 }
+/*
+int main(void) {
+  try {
+    rs::context ctx;
+    if (ctx.get_device_count() == 0)
+      throw std::runtime_error("No device detected. Is it plugged in?");
+    rs::device & dev = *ctx.get_device(0);
+
+    dev.enable_stream(rs::stream::color, rs::preset::best_quality);
+    dev.enable_stream(rs::stream::depth, rs::preset::best_quality);
+    dev.start();
+  } catch (std::exception& ex) {
+   std::cout << "Error dayo:" << ex.what() << std::endl;
+  }
+  return 0;
+  }
+*/
 
 int main (int argc, char** argv)
 {
@@ -95,7 +114,7 @@ int main (int argc, char** argv)
   manager->runManager();
 
   // If you want to run the manager in non-blocking mode, do like this
-  // manager->runManager(true);
+  // manager->runManager(true);  
 
   return 0;
 }
